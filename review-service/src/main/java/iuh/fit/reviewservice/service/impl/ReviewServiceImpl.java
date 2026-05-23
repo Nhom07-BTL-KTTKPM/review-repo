@@ -90,6 +90,36 @@ public class ReviewServiceImpl implements ReviewService {
                 .map(this::mapToResponse);
     }
 
+    @Override
+    public List<ReviewResponse> getReviewsByCustomerId(UUID customerId) {
+        return reviewRepository.findByCustomerId(customerId).stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
+    public ReviewResponse updateReview(UUID reviewId, ReviewRequest request) {
+        if (request.getRating() == null || request.getRating() < 1 || request.getRating() > 5) {
+            throw new IllegalArgumentException("Rating must be between 1 and 5");
+        }
+
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new IllegalArgumentException("Review not found"));
+
+        if (Boolean.TRUE.equals(review.getIsEdited())) {
+            throw new IllegalStateException("Review can only be edited once");
+        }
+
+        review.setRating(request.getRating());
+        review.setComment(request.getComment());
+        review.setImageUrls(request.getImageUrls() == null ? List.of() : request.getImageUrls());
+        review.setIsEdited(true);
+        review.setUpdatedAt(LocalDateTime.now());
+
+        Review saved = reviewRepository.save(review);
+        return mapToResponse(saved);
+    }
+
     private void validateRequest(ReviewRequest request) {
         if (request.getCustomerId() == null) {
             throw new IllegalArgumentException("Customer id is required");
@@ -165,6 +195,7 @@ public class ReviewServiceImpl implements ReviewService {
         response.setComment(review.getComment());
         response.setImageUrls(review.getImageUrls());
         response.setIsActive(review.getIsActive());
+        response.setIsEdited(review.getIsEdited());
         response.setCreatedAt(review.getCreatedAt());
         response.setUpdatedAt(review.getUpdatedAt());
         return response;

@@ -45,6 +45,9 @@ public class Review {
     @Column(nullable = false)
     private Boolean isActive = true;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private Boolean isEdited = false;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -112,6 +115,14 @@ public class Review {
 
     public void setIsActive(Boolean active) {
         isActive = active;
+    }
+
+    public Boolean getIsEdited() {
+        return isEdited;
+    }
+
+    public void setIsEdited(Boolean isEdited) {
+        this.isEdited = isEdited;
     }
 
     public LocalDateTime getCreatedAt() {
