@@ -15,6 +15,7 @@ public class ReviewResponse {
     private String comment;
     private List<String> imageUrls;
     private Boolean isActive;
+    private Boolean isEdited;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -88,6 +89,14 @@ public class ReviewResponse {
 
     public void setIsActive(Boolean active) {
         isActive = active;
+    }
+
+    public Boolean getIsEdited() {
+        return isEdited;
+    }
+
+    public void setIsEdited(Boolean isEdited) {
+        this.isEdited = isEdited;
     }
 
     public LocalDateTime getCreatedAt() {
