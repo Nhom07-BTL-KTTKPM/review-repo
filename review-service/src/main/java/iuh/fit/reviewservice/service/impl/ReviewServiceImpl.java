@@ -4,12 +4,14 @@ import iuh.fit.reviewservice.client.CatalogServiceClient;
 import iuh.fit.reviewservice.client.OrderServiceClient;
 import iuh.fit.reviewservice.dto.ReviewRequest;
 import iuh.fit.reviewservice.dto.ReviewResponse;
+import iuh.fit.reviewservice.dto.catalog.ProductRatingUpdateRequest;
 import iuh.fit.reviewservice.dto.catalog.ProductVariantResponse;
 import iuh.fit.reviewservice.dto.order.OrderItemResponse;
 import iuh.fit.reviewservice.dto.order.OrderResponse;
 import iuh.fit.reviewservice.dto.order.OrderStatus;
 import iuh.fit.reviewservice.entity.Review;
 import iuh.fit.reviewservice.repo.ReviewRepository;
+import iuh.fit.reviewservice.repo.ReviewRepository.ReviewStatsProjection;
 import iuh.fit.reviewservice.service.ReviewService;
 import org.springframework.stereotype.Service;
 
@@ -81,6 +83,7 @@ public class ReviewServiceImpl implements ReviewService {
         review.setUpdatedAt(LocalDateTime.now());
 
         Review saved = reviewRepository.save(review);
+            syncProductRatingStats(resolvedProductId);
         return mapToResponse(saved);
     }
 
@@ -117,7 +120,25 @@ public class ReviewServiceImpl implements ReviewService {
         review.setUpdatedAt(LocalDateTime.now());
 
         Review saved = reviewRepository.save(review);
+        syncProductRatingStats(saved.getProductId());
         return mapToResponse(saved);
+    }
+
+    private void syncProductRatingStats(UUID productId) {
+        try {
+            ReviewStatsProjection stats = reviewRepository.getReviewStatsByProductId(productId);
+            double averageRating = stats == null || stats.getAverageRating() == null ? 0.0 : stats.getAverageRating();
+            long totalReviews = stats == null || stats.getTotalReviews() == null ? 0L : stats.getTotalReviews();
+
+            ProductRatingUpdateRequest request = new ProductRatingUpdateRequest(
+                    productId,
+                    averageRating,
+                    Math.toIntExact(totalReviews)
+            );
+            catalogServiceClient.updateProductRatingStats(request);
+        } catch (Exception ex) {
+            log.warn("Failed to sync rating stats for productId={}", productId, ex);
+        }
     }
 
     private void validateRequest(ReviewRequest request) {

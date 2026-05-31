@@ -46,6 +46,7 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.getReviewsByProductId(productId, pageable));
     }
 
+
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<List<ReviewResponse>> getReviewsByCustomerId(@PathVariable UUID customerId) {
         return ResponseEntity.ok(reviewService.getReviewsByCustomerId(customerId));
